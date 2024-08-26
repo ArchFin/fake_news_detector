@@ -23,7 +23,7 @@ def clean_text(text):
     return text
 
 
-def detect_fake_news(news_text):
+def detect_fake_news(news_text,vectorisation):
     testing_news = { "text" : [news_text] }
     new_news_df = pd.DataFrame(testing_news)
     new_news_df["text"] = new_news_df["text"].apply(clean_text)
@@ -45,54 +45,72 @@ def label(n):
     else:
         raise "error"
 
-
-
 #Read csv files
-fake_df = pd.read_csv("Data\Fake.csv")
-true_df = pd.read_csv("Data\True.csv")
+def read_csv_concat():
+    fake_df = pd.read_csv("Data\Fake.csv")
+    true_df = pd.read_csv("Data\True.csv")
 
-#Assign classes
-fake_df["class"]=0
-#print(fake_df.head())
-true_df["class"]=1
-#print(true_df.head())
+    #Assign classes
+    fake_df["class"]=0
+    true_df["class"]=1
 
-news_df = pd.concat([fake_df, true_df])
+    #concat
+    news_df = pd.concat([fake_df, true_df])
+    return news_df
 
+def vectorise_and_split(news_df):
+    x = news_df["text"]
+    y = news_df["class"]
+
+    #train test split
+    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size = 0.25)
+
+    #vectorisation
+    vectorisation = TfidfVectorizer()
+    x_v_train = vectorisation.fit_transform(x_train)
+    x_v_test = vectorisation.transform(x_test)
+    return [x_v_train, x_v_test, y_train, y_test,vectorisation]
+
+def apply_logistic_regression(x_v_train, x_v_test, y_train, y_test):
+    #logistic regression
+    lr = LogisticRegression()
+    lr.fit(x_v_train,y_train)
+
+    #prediction and scoring
+    pred_lr = lr.predict(x_v_test)
+    print(lr.score(x_v_test, y_test))
+    print(classification_report(y_test,pred_lr))
+    return lr
+
+def apply_decision_tree(x_v_train, x_v_test, y_train, y_test):
+    #decision tree classifier
+    dt = DecisionTreeClassifier()
+    dt.fit(x_v_train,y_train)
+
+    #prediction and scoring linear tree
+    pred_dt  = dt.predict(x_v_test)
+    print(dt.score(x_v_test, y_test))
+    print(classification_report(y_test,pred_dt))
+    return dt
+
+
+news_df = read_csv_concat()
+
+#drop useless columns
 news_df = news_df.drop(["subject", "title", "date"], axis = 1)
-#print(news_df)
 
 #clean data
 news_df["text"] = news_df["text"].apply(clean_text)
 
-x = news_df["text"]
-y = news_df["class"]
+[x_v_train, x_v_test, y_train, y_test,vectorisation] = vectorise_and_split(news_df)
+lr = apply_logistic_regression(x_v_train, x_v_test, y_train, y_test)
+dt = apply_decision_tree(x_v_train, x_v_test, y_train, y_test)
 
-#train test split
-x_train, x_test, y_train, y_test = train_test_split(x, y, test_size = 0.25)
+again = True
+while again:
+    news_input  = input("Please put in news text, cheers")
+    detect_fake_news(news_input,vectorisation)
+    another = input("Type yes to try another news story")
+    if another != "yes":
+        again = False
 
-#vectorisation
-vectorisation = TfidfVectorizer()
-x_v_train = vectorisation.fit_transform(x_train)
-x_v_test = vectorisation.transform(x_test)
-
-#logistic regression
-lr = LogisticRegression()
-lr.fit(x_v_train,y_train)
-
-#prediction and scoring
-pred_lr = lr.predict(x_v_test)
-print(lr.score(x_v_test, y_test))
-print(classification_report(y_test,pred_lr))
-
-#decision tree classifier
-dt = DecisionTreeClassifier()
-dt.fit(x_v_train,y_train)
-
-#prediction and scoring linear tree
-pred_dt  = dt.predict(x_v_test)
-print(dt.score(x_v_test, y_test))
-print(classification_report(y_test,pred_dt))
-
-news_input  = input("Please put in news text, cheers")
-detect_fake_news(news_input)
