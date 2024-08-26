@@ -36,8 +36,6 @@ true_df["class"]=1
 
 news_df = pd.concat([fake_df, true_df])
 
-#print(news_df)
-
 news_df = news_df.drop(["subject", "title", "date"], axis = 1)
 #print(news_df)
 
@@ -47,14 +45,28 @@ news_df["text"] = news_df["text"].apply(clean_text)
 x = news_df["text"]
 y = news_df["class"]
 
+#train test split
 x_train, x_test, y_train, y_test = train_test_split(x, y, test_size = 0.25)
 
+#vectorisation
 vectorisation = TfidfVectorizer()
 x_v_train = vectorisation.fit_transform(x_train)
 x_v_test = vectorisation.transform(x_test)
 
+#logistic regression
 lr = LogisticRegression()
 lr.fit(x_v_train,y_train)
+
+#prediction and scoring
 pred_lr = lr.predict(x_v_test)
-lr.score(x_v_test, y_test)
+print(lr.score(x_v_test, y_test))
 print(classification_report(y_test,pred_lr))
+
+#decision tree classifier
+dt = DecisionTreeClassifier()
+dt.fit(x_v_train,y_train)
+
+#prediction and scoring linear tree
+pred_dt  = dt.predict(x_v_test)
+print(dt.score(x_v_test, y_test))
+print(classification_report(y_test,pred_dt))
