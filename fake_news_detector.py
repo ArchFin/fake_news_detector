@@ -7,3 +7,19 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
 
+#Read csv files
+fake_df = pd.read_csv("Data\Fake.csv")
+true_df = pd.read_csv("Data\True.csv")
+
+#Assign classes
+fake_df["class"]=0
+#print(fake_df.head())
+true_df["class"]=1
+#print(true_df.head())
+
+news_df = pd.concat([fake_df, true_df])
+
+print(news_df)
+
+news_df = news_df.drop(["subject", "title", "date"], axis = 1)
+print(news_df)
