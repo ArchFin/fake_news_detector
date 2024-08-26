@@ -1,4 +1,7 @@
 import pandas as pd
+import re
+import string
+
 
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
@@ -19,7 +22,21 @@ true_df["class"]=1
 
 news_df = pd.concat([fake_df, true_df])
 
-print(news_df)
+#print(news_df)
 
 news_df = news_df.drop(["subject", "title", "date"], axis = 1)
-print(news_df)
+#print(news_df)
+
+#clean data
+
+#functions
+def clean_text(text):
+    text = text.lower()
+    text = re.sub('\[.*?\]', '', text)
+    text = re.sub("\\W", ' ', text)
+    text = re.sub(r'https?://\S+|www\.\S+', '', text)
+    text = re.sub('<.*?>+', '', text)
+    text = re.sub('[%s]' % re.escape(string.punctuation), '', text)
+    text = re.sub('\n', '', text)
+    text = re.sub('\w*\d\w*', '', text)
+    return text
